@@ -48,24 +48,18 @@ Panel de control web moderno, ultra-ligero y reactivo diseñado específicamente
 
 **Pasos:**
 1. Clona el repositorio:
-   \`\`\`bash
+   ```bash
    git clone <tu-repositorio-github>
    cd devpanel
-   \`\`\`
-2. Configura tu PIN de acceso (Opcional):
-   Crea un archivo \`.env\` en la carpeta raíz y añade el PIN que prefieras:
-   \`\`\`env
-   CPANEL_PIN=123456
-   \`\`\`
-3. Inicia el panel con PM2 (o con Node directamente):
-   \`\`\`bash
-   # Opción 1: Con PM2 (para que corra en segundo plano)
-   pm2 start server.js --name devpanel
+   ```
+2. Ejecuta el instalador automático:
+   ```bash
+   chmod +x install.sh
+   ./install.sh
+   ```
+   *(El script revisará que tengas Node.js y PM2, configurará tu archivo `.env` y levantará el panel en segundo plano).*
 
-   # Opción 2: Para desarrollo / prueba
-   node server.js
-   \`\`\`
-4. Accede en tu navegador a:
+3. Accede en tu navegador a:
    [http://localhost:8888](http://localhost:8888)
 
 ---

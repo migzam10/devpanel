@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'cpanel',
+      name: 'devpanel',
       script: 'server.js',
       cwd: __dirname,
       env: {

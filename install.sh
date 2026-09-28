@@ -52,13 +52,11 @@ if [ ! -f .env ]; then
   PARENT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
   if [ -f .env.example ]; then
     cp .env.example .env
-    # Ajustar WEBROOT_DIR por defecto al directorio padre del script si es necesario
-    sed -i "s|WEBROOT_DIR=.*|WEBROOT_DIR=${PARENT_DIR}|g" .env
   else
     cat <<EOF > .env
 PORT=8888
 HOST=0.0.0.0
-WEBROOT_DIR=${PARENT_DIR}
+
 EOF
   fi
   echo -e "📄 Archivo de configuración ${COLOR_GREEN}.env${COLOR_RESET} creado con éxito."
@@ -69,23 +67,23 @@ else
 fi
 
 # 5. Iniciar servicio con PM2
-echo -e "${COLOR_BLUE}🚀 Iniciando cPanel con PM2...${COLOR_RESET}"
+echo -e "${COLOR_BLUE}🚀 Iniciando DevPanel con PM2...${COLOR_RESET}"
 pm2 start ecosystem.config.js
 pm2 save
 
 echo ""
 echo -e "${COLOR_GREEN}==============================================================${COLOR_RESET}"
-echo -e "${COLOR_GREEN} 🎉 ¡cPanel desplegado y funcionando correctamente! ${COLOR_RESET}"
+echo -e "${COLOR_GREEN} 🎉 ¡DevPanel desplegado y funcionando correctamente! ${COLOR_RESET}"
 echo -e "${COLOR_GREEN}==============================================================${COLOR_RESET}"
 echo ""
 echo -e "🌐 Acceso local:       ${COLOR_BLUE}http://localhost:8888${COLOR_RESET}"
 echo -e "🌐 Acceso en red:      ${COLOR_BLUE}http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'TU_IP'):8888${COLOR_RESET}"
 echo ""
 echo "🛠️ Comandos de gestión:"
-echo "   pm2 status cpanel     -> Ver estado del servicio"
-echo "   pm2 logs cpanel       -> Ver registros en tiempo real"
-echo "   pm2 restart cpanel    -> Reiniciar el panel"
-echo "   pm2 stop cpanel       -> Detener el panel"
+echo "   pm2 status devpanel     -> Ver estado del servicio"
+echo "   pm2 logs devpanel       -> Ver registros en tiempo real"
+echo "   pm2 restart devpanel    -> Reiniciar el panel"
+echo "   pm2 stop devpanel       -> Detener el panel"
 echo ""
 echo "💡 Para que inicie automáticamente al reiniciar el servidor ejecuta:"
 echo "   pm2 startup"
