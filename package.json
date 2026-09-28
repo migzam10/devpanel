@@ -1,0 +1,17 @@
+{
+  "name": "devpanel",
+  "version": "1.0.0",
+  "description": "Panel de Control Integral para Servidores y Proyectos Webroot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "cpanel",
+    "dashboard",
+    "pm2",
+    "server-management"
+  ],
+  "author": "migzam",
+  "license": "MIT"
+}

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevPanel</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6zm0 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2z'/></svg>">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- BARRA SUPERIOR -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">DevPanel</h1>
+          <span class="brand-subtitle" id="topbar-ip">Cargando servidor...</span>
+        </div>
+      </div>
+
+      <div class="topbar-metrics" id="topbar-metrics">
+        <div class="metric-pill">
+          <span class="label">CPU</span>
+          <span class="val" id="top-cpu">0%</span>
+        </div>
+        <div class="metric-pill">
+          <span class="label">RAM</span>
+          <span class="val" id="top-ram">0%</span>
+        </div>
+        <div class="metric-pill">
+          <span class="label">DISCO</span>
+          <span class="val" id="top-disk">0%</span>
+        </div>
+        <div class="metric-pill online-pill">
+          <span class="status-indicator"></span>
+          <span class="val" id="top-online-count">0 online</span>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="logout()" title="Cerrar sesión">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Salir
+        </button>
+        <div class="refresh-selector">
+          <label for="refresh-interval">Refresco:</label>
+          <select id="refresh-interval">
+            <option value="3000">3s</option>
+            <option value="5000" selected>5s</option>
+            <option value="10000">10s</option>
+            <option value="0">Pausado</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-refresh" title="Refrescar manualmente">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          Refrescar
+        </button>
+        <a href="/downloads/cpanel.tar.gz" download="cpanel.tar.gz" class="btn btn-secondary btn-sm" title="Descargar paquete para instalar en otro servidor" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Exportar
+        </a>
+        <button class="btn btn-primary btn-sm" id="btn-save-pm2" title="Guardar lista PM2 actual">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Guardar PM2
+        </button>
+      </div>
+    </header>
+
+    <!-- NAVEGACIÓN PRINCIPAL -->
+    <nav class="main-nav">
+      <button class="nav-tab active" data-tab="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Dashboard
+      </button>
+      <button class="nav-tab" data-tab="pm2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        Servicios PM2 <span class="badge" id="tab-pm2-count">0</span>
+      </button>
+      <button class="nav-tab" data-tab="sites">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        Sitios Webroot <span class="badge" id="tab-sites-count">0</span>
+      </button>
+      <button class="nav-tab" data-tab="files">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        Explorador Archivos
+      </button>
+      <button class="nav-tab" data-tab="ports">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+        Puertos y Red
+      </button>
+      <button class="nav-tab" data-tab="docker">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        Docker <span class="badge" id="tab-docker-count">0</span>
+      </button>
+      <button class="nav-tab" data-tab="apache">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+        Apache <span class="badge" id="tab-apache-count">0</span>
+      </button>
+      <button class="nav-tab" data-tab="terminal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+        Consola / Terminal
+      </button>
+    </nav>
+
+    <!-- CONTENEDOR DE PESTAÑAS -->
+    <main class="content-container">
+
+      <!-- PESTAÑA 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <!-- METRIC CARDS -->
+        <div class="metrics-grid">
+          <!-- CPU CARD -->
+          <div class="card metric-card">
+            <div class="card-header-clean">
+              <span class="card-title">Procesador (CPU)</span>
+              <span class="badge-tag" id="cpu-cores">-- núcleos</span>
+            </div>
+            <div class="metric-value-row">
+              <span class="huge-metric" id="dash-cpu-val">0%</span>
+              <div class="metric-subinfo">
+                <span>Carga: <strong id="dash-load">0.00, 0.00, 0.00</strong></span>
+                <span class="text-muted" id="dash-cpu-model">Cargando...</span>
+              </div>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill fill-cpu" id="dash-cpu-bar" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- RAM CARD -->
+          <div class="card metric-card">
+            <div class="card-header-clean">
+              <span class="card-title">Memoria RAM</span>
+              <span class="badge-tag" id="dash-ram-percent">0%</span>
+            </div>
+            <div class="metric-value-row">
+              <span class="huge-metric" id="dash-ram-used">0 GB</span>
+              <div class="metric-subinfo">
+                <span>De <strong id="dash-ram-total">0 GB</strong> totales</span>
+                <span>Disponible: <strong id="dash-ram-avail">0 GB</strong></span>
+              </div>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill fill-ram" id="dash-ram-bar" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- DISCO CARD -->
+          <div class="card metric-card">
+            <div class="card-header-clean">
+              <span class="card-title">Disco Duro (Almacenamiento)</span>
+              <span class="badge-tag" id="dash-disk-percent">0%</span>
+            </div>
+            <div class="metric-value-row">
+              <span class="huge-metric" id="dash-disk-used">0 GB</span>
+              <div class="metric-subinfo">
+                <span>De <strong id="dash-disk-total">0 GB</strong> totales</span>
+                <span>Libre: <strong id="dash-disk-free">0 GB</strong></span>
+              </div>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill fill-disk" id="dash-disk-bar" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- RESUMEN SISTEMA CARD -->
+          <div class="card metric-card">
+            <div class="card-header-clean">
+              <span class="card-title">Información del Servidor</span>
+              <span class="badge-tag success" id="dash-sys-status">🟢 Activo</span>
+            </div>
+            <div class="system-specs-list">
+              <div class="spec-row">
+                <span class="text-muted">Servidor:</span>
+                <strong id="dash-hostname">--</strong>
+              </div>
+              <div class="spec-row">
+                <span class="text-muted">S.O.:</span>
+                <strong id="dash-os">Ubuntu Linux</strong>
+              </div>
+              <div class="spec-row">
+                <span class="text-muted">Tiempo Activo:</span>
+                <strong id="dash-uptime">--</strong>
+              </div>
+              <div class="spec-row">
+                <span class="text-muted">IPs en Red:</span>
+                <span id="dash-ips" class="ip-list">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACCESOS RÁPIDOS Y ESTADO DE PM2 EN DASHBOARD -->
+                <!-- SERVICIOS DEL SISTEMA -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h2 class="card-heading">🖥️ Servicios del Sistema</h2>
+          </div>
+          <div class="card overflow-x" style="border:none; margin:0; box-shadow:none;">
+            <table class="data-table">
+              <thead>
+                <tr><th>Servicio</th><th>Puerto</th><th>Estado</th><th>Notas / Acción</th></tr>
+              </thead>
+              <tbody id="dash-system-services">
+                <tr><td colspan="4" class="loading-state">Cargando servicios...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 2: PM2 PROCESSES -->
+      <section id="tab-pm2" class="tab-pane">
+        <div class="section-toolbar">
+          <div>
+            <h2 class="section-title">Administrador de Servicios PM2</h2>
+            <p class="section-desc">Monitorea en tiempo real, reinicia, detiene y visualiza logs de tus aplicaciones.</p>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-secondary" onclick="executePm2GlobalAction('restart')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              Reiniciar Todos
+            </button>
+            <button class="btn btn-primary" onclick="savePm2()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              Guardar Estado PM2
+            </button>
+          </div>
+        </div>
+
+        <div class="card overflow-x">
+          <table class="data-table" id="pm2-table">
+            <thead>
+              <tr>
+                <th width="40">ID</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Puerto</th>
+                <th>CPU</th>
+                <th>Memoria</th>
+                <th>Uptime</th>
+                <th>Reinicios</th>
+                <th width="240">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="pm2-tbody">
+              <tr><td colspan="9" class="loading-state">Cargando procesos de PM2...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 3: SITIOS WEBROOT -->
+      <section id="tab-sites" class="tab-pane">
+        <div class="section-toolbar">
+          <div>
+            <h2 class="section-title">Sitios y Proyectos en Webroot</h2>
+            <p class="section-desc">Ubicación: <code id="webroot-path-display">/var/www/html</code></p>
+          </div>
+          <button class="btn btn-secondary" onclick="loadSites()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            Actualizar Sitios
+          </button>
+        </div>
+
+        <div class="sites-grid" id="sites-grid">
+          <div class="loading-state">Cargando proyectos en webroot...</div>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 4: EXPLORADOR DE ARCHIVOS -->
+      <section id="tab-files" class="tab-pane">
+        <div class="section-toolbar">
+          <div>
+            <h2 class="section-title">Explorador de Archivos de Webroot</h2>
+            <div class="breadcrumb" id="file-breadcrumb">
+              <span class="crumb-item" onclick="browseFolder('')">webroot</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-up-folder" onclick="goUpFolder()" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            Subir Nivel
+          </button>
+        </div>
+
+        <div class="card overflow-x">
+          <table class="data-table files-table">
+            <thead>
+              <tr>
+                <th width="30"></th>
+                <th>Nombre</th>
+                <th width="120">Tamaño</th>
+                <th width="200">Última Modificación</th>
+                <th width="100">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="files-tbody">
+              <tr><td colspan="5" class="loading-state">Cargando archivos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 5: PUERTOS Y RED -->
+      <section id="tab-ports" class="tab-pane">
+        <div class="section-toolbar">
+          <div>
+            <h2 class="section-title">Puertos y Sockets en Escucha</h2>
+            <p class="section-desc">Mapeo de puertos TCP abiertos y los procesos que los están utilizando en el servidor.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="loadPorts()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            Escanear Puertos
+          </button>
+        </div>
+
+        <div class="card overflow-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th width="100">Puerto</th>
+                <th>Dirección Vinculada</th>
+                <th>Proceso</th>
+                <th>PID</th>
+                <th>Enlace Directo</th>
+              </tr>
+            </thead>
+            <tbody id="ports-tbody">
+              <tr><td colspan="5" class="loading-state">Escaneando puertos activos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PESTAÑA DOCKER -->
+      <section id="tab-docker" class="tab-pane">
+        <div class="section-toolbar">
+          <div>
+            <h2 class="section-title">Contenedores Docker</h2>
+            <p class="section-desc">Detectados automáticamente desde el socket de Docker.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="loadDocker()">Actualizar</button>
+        </div>
+        <div class="card overflow-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Contenedor</th><th>Stack / Imagen</th><th>Estado</th><th>Puertos</th>
+              </tr>
+            </thead>
+            <tbody id="docker-tbody">
+              <tr><td colspan="4" class="loading-state">Cargando Docker...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PESTAÑA APACHE -->
+      <section id="tab-apache" class="tab-pane">
+        <div class="section-toolbar">
+          <div>
+            <h2 class="section-title">Sitios Apache (/var/www/html)</h2>
+          </div>
+          <button class="btn btn-secondary" onclick="loadApache()">Actualizar</button>
+        </div>
+        <div class="card overflow-x">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Sitio / Carpeta</th><th>Stack</th><th>Enlace</th>
+              </tr>
+            </thead>
+            <tbody id="apache-tbody">
+              <tr><td colspan="2" class="loading-state">Cargando Apache...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 6: TERMINAL -->
+      <section id="tab-terminal" class="tab-pane">
+        <div class="section-toolbar">
+          <div>
+            <h2 class="section-title">Consola y Comandos Rápidos</h2>
+            <p class="section-desc">Ejecuta comandos de mantenimiento directamente en el directorio webroot.</p>
+          </div>
+        </div>
+
+        <!-- SHORTCUT BUTTONS -->
+        <div class="terminal-shortcuts">
+          <span class="shortcut-label">Atajos rápidos:</span>
+          <button class="btn btn-secondary btn-xs" onclick="runQuickCmd('pm2 status')">pm2 status</button>
+          <button class="btn btn-secondary btn-xs" onclick="runQuickCmd('pm2 save')">pm2 save</button>
+          <button class="btn btn-secondary btn-xs" onclick="runQuickCmd('free -h')">free -h</button>
+          <button class="btn btn-secondary btn-xs" onclick="runQuickCmd('df -h /')">df -h /</button>
+          <button class="btn btn-secondary btn-xs" onclick="runQuickCmd('uptime')">uptime</button>
+          <button class="btn btn-secondary btn-xs" onclick="runQuickCmd('ss -tlpn')">ss -tlpn</button>
+          <button class="btn btn-secondary btn-xs" onclick="runQuickCmd('git status')">git status</button>
+          <button class="btn btn-secondary btn-xs" onclick="clearTerminal()">Limpiar Consola</button>
+        </div>
+
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="term-title" id="term-title-display">user@servidor:~/mis-servidores/webroot</span>
+          </div>
+          <div class="terminal-output" id="term-output">
+            <div class="term-line welcome">DevPanel Terminal v1.0. Escribe un comando o haz clic en los atajos superiores.</div>
+          </div>
+          <form class="terminal-input-row" id="terminal-form" onsubmit="handleTerminalSubmit(event)">
+            <span class="term-prompt">$</span>
+            <input type="text" id="term-input" class="term-input" placeholder="Escribe un comando (ej: ls -la, git status, node -v)..." autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm">Ejecutar</button>
+          </form>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- MODAL DE LOGS PM2 -->
+    <div class="modal-backdrop" id="logs-modal" style="display: none;">
+      <div class="modal-card modal-lg">
+        <div class="modal-header">
+          <div>
+            <h3 class="modal-title" id="logs-title">Registros del Proceso</h3>
+            <span class="text-muted" id="logs-subtitle">ID: --</span>
+          </div>
+          <div class="modal-header-actions">
+            <div class="btn-group">
+              <button class="btn btn-xs active" id="btn-log-out" onclick="setLogType('out')">stdout</button>
+              <button class="btn btn-xs" id="btn-log-err" onclick="setLogType('error')">stderr</button>
+            </div>
+            <button class="btn btn-subtle btn-xs" onclick="fetchCurrentLogs()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              Refrescar
+            </button>
+            <button class="btn btn-subtle btn-xs text-danger" onclick="flushCurrentLogs()">Limpiar</button>
+            <button class="modal-close" onclick="closeLogsModal()">&times;</button>
+          </div>
+        </div>
+        <div class="modal-body modal-logs-body">
+          <pre id="logs-content" class="code-viewer">Cargando registros...</pre>
+        </div>
+        <div class="modal-footer">
+          <label class="checkbox-label">
+            <input type="checkbox" id="auto-scroll-logs" checked> Auto-desplazar al final
+          </label>
+          <button class="btn btn-secondary btn-sm" onclick="closeLogsModal()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE VISOR DE ARCHIVO -->
+    <div class="modal-backdrop" id="file-modal" style="display: none;">
+      <div class="modal-card modal-lg">
+        <div class="modal-header">
+          <div>
+            <h3 class="modal-title" id="file-view-title">Archivo</h3>
+            <span class="text-muted" id="file-view-size">--</span>
+          </div>
+          <button class="modal-close" onclick="closeFileModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <pre id="file-view-content" class="code-viewer">Cargando...</pre>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" onclick="copyFileContent()">Copiar Contenido</button>
+          <button class="btn btn-primary btn-sm" onclick="closeFileModal()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENEDOR DE NOTIFICACIONES TOAST -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- MODAL DE LOGIN (PIN) -->
+    <div class="modal-backdrop" id="login-modal" style="display: none; background: var(--bg); z-index: 9999;">
+      <div class="modal-card" style="max-width: 380px; text-align: center; padding: 40px 20px;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🛡️</div>
+        <h2 style="margin-bottom: 10px;">Acceso Restringido</h2>
+        <p class="text-dim" style="margin-bottom: 24px; font-size: 14px;">Ingresa el PIN de seguridad para acceder al panel. (Por defecto: 123456)</p>
+        
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <input type="password" id="login-pin" class="term-input" style="width: 100%; text-align: center; font-size: 24px; letter-spacing: 12px; margin-bottom: 20px;" placeholder="••••••" autofocus required>
+          <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 16px; padding: 10px;">Desbloquear</button>
+        </form>
+        <div id="login-error" class="text-danger" style="margin-top: 15px; display: none;">PIN incorrecto.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
