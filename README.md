@@ -49,7 +49,7 @@ Panel de control web moderno, ultra-ligero y reactivo diseñado específicamente
 **Pasos:**
 1. Clona el repositorio:
    ```bash
-   git clone <tu-repositorio-github>
+   git clone https://github.com/migzam10/devpanel.git
    cd devpanel
    ```
 2. Ejecuta el instalador automático:
